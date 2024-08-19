@@ -1,0 +1,75 @@
+App.tsx
+
+// import React, { useState } from 'react';
+// import Autocomplete from './components/Autocomplete';
+// import WeatherCard from './components/WeatherCard';
+// import UnitSwitcher from './components/UnitSwitcher';
+
+// const App: React.FC = () => {
+//     const [city, setCity] = useState<string | null>(null);
+//     const [unit, setUnit] = useState<'metric' | 'imperial'>('metric');
+
+//     return (
+//         <div className="container mx-auto p-4">
+//             <h1 className="text-2xl font-bold mb-4">Weather Dashboard</h1>
+//             <Autocomplete onSelectCity={setCity} />
+//             <UnitSwitcher selectedUnit={unit} onSelectUnit={setUnit} />
+//             {city && <WeatherCard city={city} unit={unit} />}
+//         </div>
+//     );
+// };
+
+// export default App;
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import moment from 'moment';
+import { useDebounce } from './hooks/useDebounce'; // Import the custom debounce hook
+
+const API_KEY = '5a26dbae480a055bd5a29b03ac43d89c'; 
+
+const App: React.FC = () => {
+  const [city, setCity] = useState<string>('Bengaluru'); // Default city
+  const [weather, setWeather] = useState<any>(null);
+  const debouncedCity = useDebounce(city, 500);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      if (debouncedCity) {
+        try {
+          const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${debouncedCity}&appid=${API_KEY}&units=metric`);
+          setWeather(response.data);
+        } catch (error) {
+          console.error('Error fetching weather:', error);
+          setWeather(null);
+        }
+      }
+    };
+
+    fetchWeather();
+  }, [debouncedCity]);
+
+  return (
+    <div className="App p-4">
+      <h1 className="text-2xl font-bold mb-4">Weather Dashboard</h1>
+      <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Enter city" className="border p-2 mb-4"/>
+      {weather ? (
+        <div className="weather-card bg-gray-200 p-4 rounded ">
+          <div className="flex items-center mb-2">
+            <img src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} alt={weather.weather[0].description}
+              className="mr-2"/>
+            <p className="text-lg">{weather.weather[0].description}</p>
+          </div>
+
+          <div>Temperature: {weather.main.temp}°C</div>
+          <div>Humidity: {weather.main.humidity}%</div>
+          <div>Day: {moment().format('dddd')}, {moment().format('LL')}</div>
+        </div>
+      ) : (
+        <p>No weather data available. Please enter a city.</p>
+      )}
+    </div>
+  );
+};
+
+export default App;
