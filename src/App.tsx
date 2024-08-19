@@ -9,6 +9,7 @@ const App: React.FC = () => {
     const [city, setCity] = useState<string>('Bengaluru'); // Default city
     const [weather, setWeather] = useState<any>(null);
     const [unit, setUnit] = useState<'metric' | 'imperial'>('metric'); // Default unit
+    const [error, setError] = useState<boolean>(false);
     const debouncedCity = useDebounce(city, 500);
 
     useEffect(() => {
@@ -17,10 +18,15 @@ const App: React.FC = () => {
                 try {
                     const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${debouncedCity}&appid=${API_KEY}&units=${unit}`);
                     setWeather(response.data);
+                    setError(false); 
                 } catch (error) {
                     console.error('Error fetching weather:', error);
                     setWeather(null);
+                    setError(true);
                 }
+            }
+            else{
+                setError(true);
             }
         };
 
@@ -55,7 +61,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Weather data display */}
-                {weather ? (
+                {weather && !error ? (
                     <div className="weather-card bg-gray-200 p-4 rounded border border-dark">
                         <div>
                             <label className="b text-capitalize">City Name: {city}</label>
